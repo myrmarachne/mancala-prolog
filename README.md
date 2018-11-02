@@ -1,0 +1,2 @@
+# mancala-prolog
+Mancala game
