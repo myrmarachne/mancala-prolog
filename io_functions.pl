@@ -3,7 +3,7 @@
 * Used to display the board and the seeds in every of the pits.
 */
 
-display_board(board_player(PlayerPits, PlayerHouse), board_opponent(OpponentPits, OpponentHouse)) :-
+display_board(board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
   reverse(OpponentPits, OpponentPitsReversed), % write the opponents board part in the reverse order
   display_pits(OpponentPitsReversed),
   display_houses(PlayerHouse, OpponentHouse),
@@ -22,4 +22,12 @@ reverse([H|T], ReversedList) :- reverse(T, ReversedT), append(ReversedT, [H], Re
 
 /*
 * Functions used to handle the user input.
+* TODO
 */
+
+/*
+* Functions to display information about the winner.
+* TODO
+*/
+display_winner_information(remis) :- write('Remis').
+display_winner_information(Winner) :- write('And the winner is '), write(Winner), nl.
