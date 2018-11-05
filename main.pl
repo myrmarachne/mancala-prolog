@@ -3,7 +3,7 @@
 :- [ai].
 
 play :- initialize(PlayerBoard, OpponentBoard, CurrentPlayer),
-        display_board(PlayerBoard, OpponentBoard),
+        display_board(player, PlayerBoard, OpponentBoard),
         play(PlayerBoard, OpponentBoard, CurrentPlayer).
 
 % Initialize an empty mancala board with 6 pits (with 4 seeds in each of them) per player
@@ -28,11 +28,22 @@ select_and_make_move(PlayerBoard, OpponentBoard, CurrentPlayer, NewPlayerBoard, 
 % Selects the pit to move seeds from.
 % Depeding on the CurrentPlayer (whether it is players or computers turn) it waits for
 % the user input (and checks its correctness) or selects the best pit for the move.
-% TODO: change the select_pit for the player (add some verification functionality to io_functions)
-select_pit(PlayerBoard, OpponentBoard, player, Pit) :- nl, writeln(['Select pit']), read(Pit).
+select_pit(PlayerBoard, _, player, Pit) :- nl, writeln(['Select pit']), read_pit(Pit, seeds_number, PlayerBoard).
 
-% TODO: add selecting pit for the bot
-% TODO select_pit(PlayerBoard, OpponentBoard, bot, Pit).
+% a silly strategy: choose the first non-empty pit
+select_pit(PlayerBoard, _, bot, Pit) :-
+  nl, writeln(['Opponent\'s turn']),
+  first_non_empty_pit(PlayerBoard, 5, Pit).
+
+%first_non_empty_pit((0|T), Pit) :- Pit is Pit1+1, first_non_empty_pit(T, Pit1).
+first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
+  MaxPit > 0,
+  MaxPit1 is MaxPit - 1,
+  first_non_empty_pit(PlayerBoard, MaxPit1, Pit).
+first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
+  seeds_number(MaxPit, PlayerBoard, SeedsNumber),
+  SeedsNumber > 0,
+  Pit is MaxPit.
 
 
 % make_move(Pit, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard)
@@ -42,16 +53,16 @@ select_pit(PlayerBoard, OpponentBoard, player, Pit) :- nl, writeln(['Select pit'
 % the seeds
 % Check if finished in house and whether there should be another move for this player
 make_move(Pit, CurrentPlayer, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard) :-
-  seeds_amount(Pit, PlayerBoard, SeedsAmount),
+  seeds_number(Pit, PlayerBoard, SeedsNumber),
   % Check if the move would end in players house - if so, apply another move (if game not over)
-  more_turns(Pit, SeedsAmount),
-  sow_seeds(Pit, SeedsAmount, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard),
-  display_board(NewPlayerBoard, NewOpponentBoard),
+  more_turns(Pit, SeedsNumber),
+  sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard),
+  display_board(CurrentPlayer, NewPlayerBoard, NewOpponentBoard),
   !,
   not(game_over(CurrentPlayer, NewPlayerBoard, NewOpponentBoard)),
   select_and_make_move(NewPlayerBoard, NewOpponentBoard, CurrentPlayer, FinalPlayerBoard, FinalOpponentBoard).
 
 make_move(Pit, CurrentPlayer, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard) :-
-  seeds_amount(Pit, PlayerBoard, SeedsAmount),
-  sow_seeds(Pit, SeedsAmount, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard),
-  display_board(NewPlayerBoard, NewOpponentBoard).
+  seeds_number(Pit, PlayerBoard, SeedsNumber),
+  sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard),
+  display_board(CurrentPlayer, FinalPlayerBoard, FinalOpponentBoard).
