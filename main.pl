@@ -35,17 +35,6 @@ select_pit(PlayerBoard, _, bot, Pit) :-
   nl, writeln(['Opponent\'s turn']),
   first_non_empty_pit(PlayerBoard, 5, Pit).
 
-%first_non_empty_pit((0|T), Pit) :- Pit is Pit1+1, first_non_empty_pit(T, Pit1).
-first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
-  MaxPit > 0,
-  MaxPit1 is MaxPit - 1,
-  first_non_empty_pit(PlayerBoard, MaxPit1, Pit).
-first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
-  seeds_number(MaxPit, PlayerBoard, SeedsNumber),
-  SeedsNumber > 0,
-  Pit is MaxPit.
-
-
 % make_move(Pit, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard)
 % Pit - the ID of the selected start pit (Pits are numbered from 0 to 5).
 % PlayerBoard, OpponentBoard - initial state of the game board

@@ -129,20 +129,29 @@ more_turns(Pit, SeedsNumber) :- 0 is mod((SeedsNumber-6+Pit), 13).
 
 % True if PlayerPits or OpponentPits is empty (contains only zeroes).
 game_over(CurrentPlayer, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
-  pits_are_empty(PlayerPits),
+  some_pits_are_empty(PlayerPits, OpponentPits),
   move_seeds_to_house(OpponentPits, OpponentHouse, FinalOpponentHouse),
-  winner(CurrentPlayer, PlayerHouse, FinalOpponentHouse, Winner),
-  display_winner_information(Winner), !.
-
-game_over(CurrentPlayer, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
-  pits_are_empty(OpponentPits),
   move_seeds_to_house(PlayerPits, PlayerHouse, FinalPlayerHouse),
-  winner(CurrentPlayer, FinalPlayerHouse, OpponentHouse, Winner),
+  winner(CurrentPlayer, FinalPlayerHouse, FinalOpponentHouse, Winner),
   display_winner_information(Winner), !.
 
 % Checks if the list contains anything else then 0
 pits_are_empty([]).
 pits_are_empty([0|T]) :- pits_are_empty(T).
+
+% Checks if either of the players has empty pits
+some_pits_are_empty(Pits1, _) :- pits_are_empty(Pits1).
+some_pits_are_empty(_, Pits2) :- pits_are_empty(Pits2).
+
+%first_non_empty_pit((0|T), Pit) :- Pit is Pit1+1, first_non_empty_pit(T, Pit1).
+first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
+  MaxPit > 0,
+  MaxPit1 is MaxPit - 1,
+  first_non_empty_pit(PlayerBoard, MaxPit1, Pit).
+first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
+  seeds_number(MaxPit, PlayerBoard, SeedsNumber),
+  SeedsNumber > 0,
+  Pit is MaxPit.
 
 % At the end of the game, moves all seeds from a part of the board to owner's house.
 % move_seeds_to_house(Pits, House, FinalHouse)
