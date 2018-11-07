@@ -1,6 +1,9 @@
-:- [io_functions].
-:- [basic_rules].
-:- [ai].
+:- use_module(basic_rules).
+:- use_module(io_functions).
+:- use_module(ai).
+
+
+% TODO: moduły, stała 6
 
 play :- initialize(PlayerBoard, OpponentBoard, CurrentPlayer),
         display_board(player, PlayerBoard, OpponentBoard),

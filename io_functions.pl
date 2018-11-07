@@ -2,7 +2,13 @@
 * Functions used for displaying purposes.
 * Used to display the board and the seeds in every of the pits.
 */
-:- [utils].
+:- module(io_functions, [
+  display_board/3,
+  read_pit/3,
+  display_winner_information/1
+]).
+
+:- use_module(utils).
 
 display_board(bot, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
   display_board(player, board(OpponentPits, OpponentHouse), board(PlayerPits, PlayerHouse)).

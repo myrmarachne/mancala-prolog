@@ -1,6 +1,9 @@
 /*
 * General-use unctions
 */
+:- module(utils, [
+  reverse/2
+]).
 
 % Reverse the given list (example: [1,2,3] -> [3,2,1])
 reverse([], []).
