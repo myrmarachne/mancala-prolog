@@ -34,9 +34,10 @@ select_and_make_move(PlayerBoard, OpponentBoard, CurrentPlayer, NewPlayerBoard, 
 select_pit(PlayerBoard, _, player, Pit) :- nl, writeln(['Select pit']), read_pit(Pit, seeds_number, PlayerBoard).
 
 % a silly strategy: choose the first non-empty pit
-select_pit(PlayerBoard, _, bot, Pit) :-
+select_pit(PlayerBoard, OpponentBoard, bot, Pit) :-
   nl, writeln(['Opponent\'s turn']),
-  first_non_empty_pit(PlayerBoard, 5, Pit).
+  find_best_move(PlayerBoard, OpponentBoard, Pit).
+  %first_non_empty_pit(PlayerBoard, 5, Pit).
 
 % make_move(Pit, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard)
 % Pit - the ID of the selected start pit (Pits are numbered from 0 to 5).
