@@ -1,9 +1,11 @@
-:- [io_functions].
-:- [basic_rules].
-:- [ai].
+:- use_module(basic_rules).
+:- use_module(io_functions).
+:- use_module(ai).
+
+
+% TODO: moduły, stała 6
 
 play :- initialize(GameState),
-        display_board(GameState),
         play(GameState).
 
 % Initialize an empty mancala board with 6 pits (with 4 seeds in each of them) per player
@@ -22,6 +24,8 @@ play(GameState0) :-
   play(GameState2).
 
 select_and_make_move(GameState0, GameState1) :-
+  display_board(CurrentPlayer, PlayerBoard, OpponentBoard),
+  not(game_over(CurrentPlayer, PlayerBoard, OpponentBoard)),
   select_pit(GameState0, Pit),
   make_move(Pit, GameState0, GameState1).
 
@@ -32,9 +36,11 @@ select_pit(game_state(PlayerBoard, _, player), Pit) :-
   nl, writeln(['Select pit']), read_pit(Pit, seeds_number, PlayerBoard), !.
 
 % A silly strategy: choose the first non-empty pit
-select_pit(game_state(PlayerBoard, _, bot), Pit) :-
+select_pit(game_state(PlayerBoard, OpponentBoard, bot), Pit) :-
   nl, writeln(['Opponent\'s turn']),
-  first_non_empty_pit(PlayerBoard, 5, Pit).
+  find_best_move(PlayerBoard, OpponentBoard, Pit),
+  write('Opponent selected: '),
+  writeln(Pit).
 
 % make_move(Pit, GameState0, GameState2)
 % Pit - the ID of the selected start pit (Pits are numbered from 0 to 5).
@@ -48,14 +54,10 @@ make_move(Pit, GameState0, GameState2) :-
   % Check if the move would end in players house - if so, apply another move (if game not over)
   more_turns(Pit, SeedsNumber),
   sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-  display_board(GameState1),
   !,
-  not(game_over(GameState1)),
-  writeln('[Extra turn!]'),
   select_and_make_move(GameState1, GameState2).
 
 make_move(Pit, GameState0, GameState1) :-
   GameState0 = game_state(PlayerBoard0, _, _),
   seeds_number(Pit, PlayerBoard0, SeedsNumber),
-  sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-  display_board(GameState1).
+  sow_seeds(Pit, SeedsNumber, GameState0, GameState1).

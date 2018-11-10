@@ -2,7 +2,20 @@
 * Functions used to distribute seeds into pits.
 */
 
-:- [io_functions].
+:- module(basic_rules, [
+  switch_player/2,
+  seeds_number/3,
+  more_turns/2,
+  game_over/3,
+  sow_seeds/6,
+  seeds_number/3,
+  boardSize/1,
+  first_non_empty_pit/3 %TODO usunac pozniej
+  ]).
+
+:- use_module(io_functions).
+
+boardSize(6).
 
 % switch_player(GameState0, GameState1)
 switch_player(
@@ -22,12 +35,14 @@ seeds_number(N, board(Board, _), SeedsNumber) :- nth0(N, Board, SeedsNumber).
 % Distribute the seeds from Nth pit to the consecutive pits on player and opponent
 % boards (the seeds distribution direction should be counter-clockwise).
 sow_seeds(Pit, SeedsNumber0, GameState0, GameState2) :-
-  SeedsNumber0 =< (12-Pit),
+  boardSize(BoardSize),
+  SeedsNumber =< (2*BoardSize-Pit),SeedsNumber0 =< (12-Pit),
   sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1),
   sow_seeds_opponent_side(SeedsNumber1, GameState1, _, GameState2).
 
 sow_seeds(Pit, SeedsNumber0, GameState0, GameState3) :-
-  SeedsNumber0 > (12-Pit),
+  boardSize(BoardSize),
+  SeedsNumber > (2*BoardSize-Pit),
   sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1),
   sow_seeds_opponent_side(SeedsNumber1, GameState1, SeedsNumber2, GameState2),
   sow_seeds(-1, SeedsNumber2, GameState2, GameState3).
@@ -42,12 +57,13 @@ sow_seeds(Pit, SeedsNumber0, GameState0, GameState3) :-
 sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1) :-
     GameState0 = game_state(board(PlayerPits0, PlayerHouse0), OpponentBoard, CurrentPlayer),
     GameState1 = game_state(board(PlayerPits2, PlayerHouse1), OpponentBoard, CurrentPlayer),
-    SeedsNumber0 > (6-Pit),
+    boardSize(BoardSize),
+    SeedsNumber > (BoardSize-Pit),
     collect_seeds(Pit, PlayerPits0, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber0, PlayerPits1, PlayerPits2),
     PlayerHouse1 is PlayerHouse0+1, % Add a seed to the house
-    SeedsNumber1 is SeedsNumber0-6+Pit.
+    SeedsNumber1 is SeedsNumber0-BoardSize+Pit.
 
 % In this case it is possible that the opponent's board may change (in case of
 % opponent's seeds capturing).
@@ -55,7 +71,8 @@ sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1) :
 sow_seeds_player_side(Pit, SeedsNumber, GameState0, 0, GameState2) :-
     GameState0 = game_state(board(PlayerPits0, PlayerHouse0), board(OpponentPits0, OpponentHouse), CurrentPlayer),
     GameState1 = game_state(board(PlayerPits2, PlayerHouse0), board(OpponentPits0, OpponentHouse), CurrentPlayer),
-    SeedsNumber < (6-Pit),
+    boardSize(BoardSize),
+    SeedsNumber < (BoardSize-Pit),
     collect_seeds(Pit, PlayerPits0, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber, PlayerPits1, PlayerPits2),
@@ -64,7 +81,8 @@ sow_seeds_player_side(Pit, SeedsNumber, GameState0, 0, GameState2) :-
 sow_seeds_player_side(Pit, SeedsNumber, GameState0, 0, GameState1) :-
     GameState0 = game_state(board(PlayerPits0, PlayerHouse0), OpponentBoard, CurrentPlayer),
     GameState1 = game_state(board(PlayerPits2, PlayerHouse1), OpponentBoard, CurrentPlayer),
-    SeedsNumber =:= 6-Pit,
+    boardSize(BoardSize),
+    SeedsNumber =:= BoardSize-Pit,
     collect_seeds(Pit, PlayerPits0, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber, PlayerPits1, PlayerPits2),
@@ -78,15 +96,17 @@ sow_seeds_opponent_side(0, GameState, 0, GameState) :- !.
 sow_seeds_opponent_side(SeedsNumber, GameState0, 0, GameState1) :-
     GameState0 = game_state(PlayerBoard, board(OpponentPits0, OpponentHouse), CurrentPlayer),
     GameState1 = game_state(PlayerBoard, board(OpponentPits1, OpponentHouse), CurrentPlayer),
-    SeedsNumber =< 6,
+    boardSize(BoardSize),
+    SeedsNumber =< BoardSize,
     distribute_seeds(0, SeedsNumber, OpponentPits0, OpponentPits1).
 
 sow_seeds_opponent_side(SeedsNumber, GameState0, SeedsNumber1, GameState1) :-
     GameState0 = game_state(PlayerBoard, board(OpponentPits0, OpponentHouse), CurrentPlayer),
     GameState1 = game_state(PlayerBoard, board(OpponentPits1, OpponentHouse), CurrentPlayer),
-    SeedsNumber > 6,
+    SeedsNumber > BoardSize,
     distribute_seeds(0, SeedsNumber, OpponentPits0, OpponentPits1),
-    SeedsNumber1 is SeedsNumber-6.
+    boardSize(BoardSize),
+    SeedsNumber1 is SeedsNumber-BoardSize.
 
 % collect_seeds(Pit, PlayerBoard0, PlayerBoard1)
 % Pick up the all the seed from the given Pit and return the new Board.
@@ -112,7 +132,8 @@ check_if_beatable(Pit, SeedsNumber, GameState0, GameState1) :-
   GameState1 = game_state(board(PlayerPits1, PlayerHouse1), board(OpponentPits1, OpponentHouse), CurrentPlayer),
   EndPit is Pit+SeedsNumber,
   nth0(EndPit, PlayerPits0, 1), % check if the EndPit containts 1 seeds
-  OppositePit is 5 - EndPit,
+  boardSize(BoardSize),
+  OppositePit is BoardSize - 1 - EndPit,
   nth0(OppositePit, OpponentPits0, SeedsOnOppositePit), % check if the opposite pit contains any seeds
   SeedsOnOppositePit > 0, !,
   collect_seeds(EndPit, PlayerPits0, PlayerPits1), % collect the one seed from the EndPit
@@ -122,7 +143,9 @@ check_if_beatable(Pit, SeedsNumber, GameState0, GameState1) :-
 check_if_beatable(_, _, GameState, GameState) :- !.
 
 % Check if the number of moves would be 1 or more (at least 2)
-more_turns(Pit, SeedsNumber) :- 0 is mod((SeedsNumber-6+Pit), 13).
+more_turns(Pit, SeedsNumber) :-
+  boardSize(BoardSize),
+  0 is mod((SeedsNumber-BoardSize+Pit), (2*BoardSize+1)).
 
 % True if PlayerPits or OpponentPits is empty (contains only zeroes).
 game_over(GameState) :-
