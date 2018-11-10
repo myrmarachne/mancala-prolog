@@ -2,9 +2,6 @@
 :- use_module(io_functions).
 :- use_module(ai).
 
-
-% TODO: moduły, stała 6
-
 play :- initialize(PlayerBoard, OpponentBoard, CurrentPlayer),
         play(PlayerBoard, OpponentBoard, CurrentPlayer).
 
