@@ -7,7 +7,10 @@
   seeds_number/3,
   more_turns/2,
   game_over/3,
-  sow_seeds/6
+  sow_seeds/6,
+  seeds_number/3,
+  boardSize/1,
+  first_non_empty_pit/3 %TODO usunac pozniej
   ]).
 
 :- use_module(io_functions).

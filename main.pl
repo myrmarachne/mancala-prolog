@@ -6,7 +6,6 @@
 % TODO: moduły, stała 6
 
 play :- initialize(PlayerBoard, OpponentBoard, CurrentPlayer),
-        display_board(player, PlayerBoard, OpponentBoard),
         play(PlayerBoard, OpponentBoard, CurrentPlayer).
 
 % Initialize an empty mancala board with 6 pits (with 4 seeds in each of them) per player
@@ -25,6 +24,8 @@ play(PlayerBoard, OpponentBoard, CurrentPlayer) :-
   play(NewOpponentBoard, NewPlayerBoard, NextPlayer).
 
 select_and_make_move(PlayerBoard, OpponentBoard, CurrentPlayer, NewPlayerBoard, NewOpponentBoard) :-
+  display_board(CurrentPlayer, PlayerBoard, OpponentBoard),
+  not(game_over(CurrentPlayer, PlayerBoard, OpponentBoard)),
   select_pit(PlayerBoard, OpponentBoard, CurrentPlayer, Pit),
   make_move(Pit, CurrentPlayer, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard).
 
@@ -36,8 +37,9 @@ select_pit(PlayerBoard, _, player, Pit) :- nl, writeln(['Select pit']), read_pit
 % a silly strategy: choose the first non-empty pit
 select_pit(PlayerBoard, OpponentBoard, bot, Pit) :-
   nl, writeln(['Opponent\'s turn']),
-  find_best_move(PlayerBoard, OpponentBoard, Pit).
-  %first_non_empty_pit(PlayerBoard, 5, Pit).
+  find_best_move(PlayerBoard, OpponentBoard, Pit),
+  write('Opponent selected: '),
+  writeln(Pit).
 
 % make_move(Pit, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard)
 % Pit - the ID of the selected start pit (Pits are numbered from 0 to 5).
@@ -50,12 +52,9 @@ make_move(Pit, CurrentPlayer, PlayerBoard, OpponentBoard, FinalPlayerBoard, Fina
   % Check if the move would end in players house - if so, apply another move (if game not over)
   more_turns(Pit, SeedsNumber),
   sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard),
-  display_board(CurrentPlayer, NewPlayerBoard, NewOpponentBoard),
   !,
-  not(game_over(CurrentPlayer, NewPlayerBoard, NewOpponentBoard)),
   select_and_make_move(NewPlayerBoard, NewOpponentBoard, CurrentPlayer, FinalPlayerBoard, FinalOpponentBoard).
 
 make_move(Pit, CurrentPlayer, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard) :-
   seeds_number(Pit, PlayerBoard, SeedsNumber),
-  sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard),
-  display_board(CurrentPlayer, FinalPlayerBoard, FinalOpponentBoard).
+  sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard).
