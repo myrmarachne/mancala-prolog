@@ -3,7 +3,8 @@
 */
 :- module(utils, [
   reverse/2,
-  consecutive/2
+  consecutive/2,
+  sum_list/2
 ]).
 
 % Reverse the given list (example: [1,2,3] -> [3,2,1])
@@ -19,3 +20,9 @@ consecutive(N, Max, List) :- (
   List = [N|List1],
   consecutive(N1, Max, List1)
 ).
+
+% Sum of all elements in a list
+sum_list([], 0).
+sum_list([H|T], Sum) :-
+  sum_list(T, Sum1),
+  Sum is Sum1 + H.

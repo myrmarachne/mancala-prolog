@@ -6,7 +6,7 @@
 :- use_module(basic_rules).
 :- use_module(utils).
 
-depth(5).
+depth(4).
 
 % List of IDs of all pits on the board
 find_best_move(PlayerBoard, board(OpponentPits, OpponentHouse), BestPit) :-
@@ -53,8 +53,8 @@ select_best_move_from_list([Pit|Pits], PlayerBoard, OpponentBoard, Depth, Type,
     % Check if the move would end in players house - if so, apply another move (if game not over)
     sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, NewPlayerBoard, NewOpponentBoard),
     !,
-    switch_type(Type, NexType),
-    minimax(NewPlayerBoard, NewOpponentBoard, Depth, Type, NexType, P, Value),
+    switch_type(Type, NextType),
+    minimax(NewOpponentBoard, NewPlayerBoard, Depth, Type, NextType, P, Value),
     compare(Pit, Value, CurrentPit, CurrentValue, CurrentPit1, CurrentValue1),
     select_best_move_from_list(Pits, PlayerBoard, OpponentBoard, Depth, Type,
       CurrentPit1, CurrentValue1, BestPit, BestValue).
@@ -64,14 +64,14 @@ switch_type(minimize, maximize).
 switch_type(maximize, minimize).
 
 % In case of Depth == 0
-minimax(PlayerBoard, OpponentBoard, 0, maximize, NexType, Pit, Value) :-
+minimax(PlayerBoard, OpponentBoard, 0, maximize, NextType, Pit, Value) :-
   evaluate(PlayerBoard, OpponentBoard, Val),
   Value is Val.
-minimax(PlayerBoard, OpponentBoard, 0, minimize, NexType, Pit, Value) :-
+minimax(PlayerBoard, OpponentBoard, 0, minimize, NextType, Pit, Value) :-
   evaluate(PlayerBoard, OpponentBoard, Val),
   Value is (-1) * Val.
 
-minimax(PlayerBoard, board(OpponentPits, OpponentHouse), Depth, Type, NexType, Pit, Value) :-
+minimax(PlayerBoard, board(OpponentPits, OpponentHouse), Depth, Type, NextType, Pit, Value) :-
   Depth > 0,
   % Get the list of currently available pits
   boardSize(BoardSize),
@@ -79,11 +79,13 @@ minimax(PlayerBoard, board(OpponentPits, OpponentHouse), Depth, Type, NexType, P
   all_available_pits(InitialList, OpponentPits, [], CorrectPits),
   Depth1 is Depth - 1,
   select_best_move_from_list(CorrectPits, PlayerBoard, board(OpponentPits, OpponentHouse),
-  Depth1, NexType, -1, -9999, Pit, Value).
+  Depth1, NextType, -1, -9999, Pit, Value).
 
-% TODO change the evaluation function
 evaluate(board(Pits, House), board(Pits2, House2), Value) :-
-  Value is House - House2.
+  sum_list(Pits, PitsSum),
+  sum_list(Pits2, PitsSum2),
+  Value is 2*(House - House2) + 0*(PitsSum - PitsSum2).
+
 
 % Compares the give Pit and Value with the Currently best Pit and Value
 % and returns the pair with higher Value
