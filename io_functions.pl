@@ -4,10 +4,11 @@
 */
 :- [utils].
 
-display_board(bot, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
-  display_board(player, board(OpponentPits, OpponentHouse), board(PlayerPits, PlayerHouse)).
+display_board(bot, GameState) :-
+  display_board(player, GameState).
 
-display_board(player, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
+display_board(player, GameState) :-
+  GameState = game_state(board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse), _),
   reverse(OpponentPits, OpponentPitsReversed), % write the opponents board part in the reverse order
   display_pits(OpponentPitsReversed),
   display_houses(PlayerHouse, OpponentHouse),
