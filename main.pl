@@ -3,7 +3,7 @@
 :- [ai].
 
 play :- initialize(GameState),
-        display_board(player, GameState),
+        display_board(GameState),
         play(GameState).
 
 % Initialize an empty mancala board with 6 pits (with 4 seeds in each of them) per player
@@ -43,19 +43,19 @@ select_pit(game_state(PlayerBoard, _, bot), Pit) :-
 % the seeds
 % Check if finished in house and whether there should be another move for this player
 make_move(Pit, GameState0, GameState2) :-
-  GameState0 = game_state(PlayerBoard0, _, CurrentPlayer),
+  GameState0 = game_state(PlayerBoard0, _, _),
   seeds_number(Pit, PlayerBoard0, SeedsNumber),
   % Check if the move would end in players house - if so, apply another move (if game not over)
   more_turns(Pit, SeedsNumber),
   sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-  display_board(CurrentPlayer, GameState1),
+  display_board(GameState1),
   !,
   not(game_over(GameState1)),
   writeln('[Extra turn!]'),
   select_and_make_move(GameState1, GameState2).
 
 make_move(Pit, GameState0, GameState1) :-
-  GameState0 = game_state(PlayerBoard0, _, CurrentPlayer),
+  GameState0 = game_state(PlayerBoard0, _, _),
   seeds_number(Pit, PlayerBoard0, SeedsNumber),
   sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-  display_board(CurrentPlayer, GameState1).
+  display_board(GameState1).
