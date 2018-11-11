@@ -21,16 +21,16 @@ display_board(GameState) :-
   display_pits(PlayerPits).
 
 % Display number of seeds in every pit
-display_pits([P|Ps]) :- tab(2), write(P), display_pits(Ps).
+display_pits([P|Ps]) :- pit_tabs(P, Tabs), tab(Tabs), write(P), display_pits(Ps).
 display_pits([]) :- nl.
+
+pit_tabs(P, Tabs) :- P=<9, Tabs is 2.
+pit_tabs(P, Tabs) :- P>9, Tabs is 1.
 
 % Display the number of seeds in both houses
 display_houses(PlayerHouse, OpponentHouse) :- write(OpponentHouse), tab(18), write(PlayerHouse), nl.
 
-/*
-* Functions to display information about the winner.
-* TODO
-*/
+% Display information about the winner.
 display_winner_information(tie) :- write('Tie').
 display_winner_information(Winner) :- write('And the winner is '), write(Winner), nl.
 

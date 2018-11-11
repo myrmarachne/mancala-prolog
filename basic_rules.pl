@@ -9,8 +9,7 @@
   game_over/1,
   sow_seeds/4,
   seeds_number/3,
-  boardSize/1,
-  first_non_empty_pit/3 %TODO usunac pozniej
+  boardSize/1
   ]).
 
 :- use_module(io_functions).
@@ -148,13 +147,13 @@ more_turns(Pit, SeedsNumber) :-
   boardSize(BoardSize),
   0 is mod((SeedsNumber-BoardSize+Pit), (2*BoardSize+1)).
 
-% True if PlayerPits or OpponentPits is empty (contains only zeroes).
-game_over(GameState) :-
-  GameState = game_state(board(PlayerPits, PlayerHouse0), board(OpponentPits, OpponentHouse0), CurrentPlayer),
-  some_pits_are_empty(PlayerPits, OpponentPits),
-  move_seeds_to_house(OpponentPits, OpponentHouse0, OpponentHouse1),
-  move_seeds_to_house(PlayerPits, PlayerHouse0, PlayerHouse1),
-  winner(CurrentPlayer, PlayerHouse1, OpponentHouse1, Winner),
+% Checks if PlayerPits or OpponentPits is empty (contains only zeroes) and determiens the winner.
+game_over(GameState0) :-
+  either_side_is_empty(GameState0),
+  move_seeds_to_houses(GameState0, GameState1),
+  winner(GameState1, Winner),
+  writeln('\nGame over!'),
+  display_board(GameState1),
   display_winner_information(Winner), !.
 
 % Checks if the list contains anything else then 0
@@ -162,18 +161,12 @@ pits_are_empty([]).
 pits_are_empty([0|T]) :- pits_are_empty(T).
 
 % Checks if either of the players has empty pits
-some_pits_are_empty(Pits1, _) :- pits_are_empty(Pits1).
-some_pits_are_empty(_, Pits2) :- pits_are_empty(Pits2).
-
-% A silly strategy for the bot: choose the first pit which is not empty
-first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
-  MaxPit > 0,
-  MaxPit1 is MaxPit - 1,
-  first_non_empty_pit(PlayerBoard, MaxPit1, Pit).
-first_non_empty_pit(PlayerBoard, MaxPit, Pit) :-
-  seeds_number(MaxPit, PlayerBoard, SeedsNumber),
-  SeedsNumber > 0,
-  Pit is MaxPit.
+either_side_is_empty(GameState) :-
+  GameState = game_state(board(PlayerPits, _), _, _),
+  pits_are_empty(PlayerPits).
+either_side_is_empty(GameState) :-
+  GameState = game_state(_, board(OpponentPits, _), _),
+  pits_are_empty(OpponentPits).
 
 % At the end of the game, moves all seeds from a part of the board to owner's house.
 % move_seeds_to_house(Pits, House, FinalHouse)
@@ -182,12 +175,21 @@ move_seeds_to_house([H|T], House, FinalHouse) :-
   House1 is House + H,
   move_seeds_to_house(T, House1, FinalHouse).
 
+move_seeds_to_houses(GameState0, GameState1) :-
+  GameState0 = game_state(board(PlayerPits, PlayerHouse0), board(OpponentPits, OpponentHouse0), CurrentPlayer),
+  GameState1 = game_state(board([0,0,0,0,0,0], PlayerHouse1), board([0,0,0,0,0,0], OpponentHouse1), CurrentPlayer),
+  move_seeds_to_house(OpponentPits, OpponentHouse0, OpponentHouse1),
+  move_seeds_to_house(PlayerPits, PlayerHouse0, PlayerHouse1).
+
 % Returns the Winner
-winner(_, PlayerPoints, OpponentPoints, tie) :-
-  PlayerPoints =:= OpponentPoints.
+winner(GameState, tie) :-
+  GameState = game_state(board(_, PlayerHouse), board(_, OpponentHouse), _),
+  PlayerHouse =:= OpponentHouse.
 
-winner(Player, PlayerPoints, OpponentPoints, Player) :-
-  PlayerPoints > OpponentPoints.
+winner(GameState, CurrentPlayer) :-
+  GameState = game_state(board(_, PlayerHouse), board(_, OpponentHouse), CurrentPlayer),
+  PlayerHouse > OpponentHouse.
 
-winner(Player, _, _, NextPlayer) :-
-  switch_player(Player, NextPlayer).
+winner(GameState, NextPlayer) :-
+  GameState = game_state(_, _, CurrentPlayer),
+  switch_player(CurrentPlayer, NextPlayer).

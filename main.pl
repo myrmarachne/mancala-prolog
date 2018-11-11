@@ -51,6 +51,7 @@ make_move(Pit, GameState0, GameState2) :-
   seeds_number(Pit, PlayerBoard0, SeedsNumber),
   % Check if the move would end in players house - if so, apply another move (if game not over)
   more_turns(Pit, SeedsNumber),
+  writeln('Extra turn!'),
   sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
   !,
   select_and_make_move(GameState1, GameState2).
