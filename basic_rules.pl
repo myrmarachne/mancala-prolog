@@ -7,7 +7,10 @@
   seeds_number/3,
   more_turns/2,
   game_over/3,
-  sow_seeds/6
+  sow_seeds/6,
+  seeds_number/3,
+  boardSize/1,
+  first_non_empty_pit/3 %TODO usunac pozniej
   ]).
 
 :- use_module(io_functions).
@@ -26,7 +29,8 @@ seeds_number(N, board(Board, _), SeedsNumber) :- nth0(N, Board, SeedsNumber).
 % Distribute the seeds from Nth pit to the consecutive pits on player and opponent
 % boards (the seeds distribution direction should be counter-clockwise).
 sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard) :-
-  SeedsNumber =< (2*boardSize-Pit),
+  boardSize(BoardSize),
+  SeedsNumber =< (2*BoardSize-Pit),
   sow_seeds_player_side(Pit,
     SeedsNumber, PlayerBoard, OpponentBoard,
     IntermediateSeedsNumber, IntermediatePlayerBoard, IntermediateOpponentBoard),
@@ -35,7 +39,8 @@ sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalO
     FinalSeedsNumber, FinalPlayerBoard, FinalOpponentBoard).
 
 sow_seeds(Pit, SeedsNumber, PlayerBoard, OpponentBoard, FinalPlayerBoard, FinalOpponentBoard) :-
-  SeedsNumber > (2*boardSize-Pit),
+  boardSize(BoardSize),
+  SeedsNumber > (2*BoardSize-Pit),
   sow_seeds_player_side(Pit,
     SeedsNumber, PlayerBoard, OpponentBoard,
     IntermediateSeedsNumber, IntermediatePlayerBoard, IntermediateOpponentBoard),
@@ -57,12 +62,13 @@ sow_seeds_player_side(Pit,
   SeedsNumber, board(PlayerPits, PlayerHouse), OpponentBoard,
   IntermediateSeedsNumber, board(IntermediatePlayerPits, IntermediatePlayerHouse),
   OpponentBoard) :-
-    SeedsNumber > (boardSize-Pit),
+    boardSize(BoardSize),
+    SeedsNumber > (BoardSize-Pit),
     collect_seeds(Pit, PlayerPits, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber, PlayerPits1, IntermediatePlayerPits),
     IntermediatePlayerHouse is PlayerHouse+1, % Add a seed to the house
-    IntermediateSeedsNumber is SeedsNumber-boardSize+Pit.
+    IntermediateSeedsNumber is SeedsNumber-BoardSize+Pit.
 
 % In this case it is possible that the opponent's board may change (in case of
 % opponent's seeds capturing).
@@ -70,7 +76,8 @@ sow_seeds_player_side(Pit,
 sow_seeds_player_side(Pit,
   SeedsNumber, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse),
   0, board(IntermediatePlayerPits, IntermediatePlayerHouse), board(IntermediateOpponentPits, OpponentHouse)) :-
-    SeedsNumber < (boardSize-Pit),
+    boardSize(BoardSize),
+    SeedsNumber < (BoardSize-Pit),
     collect_seeds(Pit, PlayerPits, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber, PlayerPits1, PlayerPits2),
@@ -81,7 +88,8 @@ sow_seeds_player_side(Pit,
   SeedsNumber, board(PlayerPits, PlayerHouse), OpponentBoard,
   0, board(IntermediatePlayerPits, IntermediatePlayerHouse),
   OpponentBoard) :-
-    SeedsNumber =:= boardSize-Pit,
+    boardSize(BoardSize),
+    SeedsNumber =:= BoardSize-Pit,
     collect_seeds(Pit, PlayerPits, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber, PlayerPits1, IntermediatePlayerPits),
@@ -94,14 +102,16 @@ sow_seeds_player_side(Pit,
 sow_seeds_opponent_side(0, PlayerBoard, OpponentBoard, 0, PlayerBoard, OpponentBoard) :- !.
 sow_seeds_opponent_side(SeedsNumber, PlayerBoard, board(OpponentPits, OpponentHouse), 0,
   PlayerBoard, board(FinalOpponentPits, OpponentHouse)) :-
-    SeedsNumber =< boardSize,
+    boardSize(BoardSize),
+    SeedsNumber =< BoardSize,
     distribute_seeds(0, SeedsNumber, OpponentPits, FinalOpponentPits).
 
 sow_seeds_opponent_side(SeedsNumber, PlayerBoard, board(OpponentPits, OpponentHouse), FinalSeedsNumber,
   PlayerBoard, board(FinalOpponentPits, OpponentHouse)) :-
     SeedsNumber > 6,
     distribute_seeds(0, SeedsNumber, OpponentPits, FinalOpponentPits),
-    FinalSeedsNumber is SeedsNumber-boardSize.
+    boardSize(BoardSize),
+    FinalSeedsNumber is SeedsNumber-BoardSize.
 
 % collect_seeds(Pit, PlayerBoard, NewPlayerBoard)
 % Pick up the all the seed from the given Pit and return the new Board.
@@ -125,7 +135,8 @@ distribute_seeds(0, Seeds, [H|T], [H1|T1]) :- H1 is H+1, Seeds1 is Seeds-1, dist
 check_if_beatable(Pit, SeedsNumber, PlayerPits, PlayerHouse, OpponentPits, FinalPlayerPits, FinalPlayerHouse, FinalOpponentPits) :-
   EndPit is Pit+SeedsNumber,
   nth0(EndPit, PlayerPits, 1), % check if the EndPit containts 1 seeds
-  OppositePit is boardSize - 1 - EndPit,
+  boardSize(BoardSize),
+  OppositePit is BoardSize - 1 - EndPit,
   nth0(OppositePit, OpponentPits, SeedsOnOppositePit), % check if the opposite pit contains any seeds
   SeedsOnOppositePit > 0, !,
   collect_seeds(EndPit, PlayerPits, FinalPlayerPits), % collect the one seed from the EndPit
@@ -135,7 +146,9 @@ check_if_beatable(Pit, SeedsNumber, PlayerPits, PlayerHouse, OpponentPits, Final
 check_if_beatable(_, _, PlayerPits, PlayerHouse, OpponentPits, PlayerPits, PlayerHouse, OpponentPits) :- !.
 
 % check if the number of moves would be 1 or more (at least 2)
-more_turns(Pit, SeedsNumber) :- 0 is mod((SeedsNumber-boardSize+Pit), (2*boardSize+1)).
+more_turns(Pit, SeedsNumber) :-
+  boardSize(BoardSize),
+  0 is mod((SeedsNumber-BoardSize+Pit), (2*BoardSize+1)).
 
 % True if PlayerPits or OpponentPits is empty (contains only zeroes).
 game_over(CurrentPlayer, board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse)) :-
