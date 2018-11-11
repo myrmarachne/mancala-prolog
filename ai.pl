@@ -6,7 +6,7 @@
 :- use_module(basic_rules).
 :- use_module(utils).
 
-depth(4).
+depth(1).   % todo 4
 
 % List of IDs of all pits on the board
 find_best_move(GameState, BestPit) :-
@@ -33,7 +33,7 @@ all_available_pits([_|Ls], [_|Zs], ResultPits, FinalPits) :-
   all_available_pits(Ls, Zs, ResultPits, FinalPits).
 
 % Function that analyzes all possible moves made by selecting the pits from the lists
-select_best_move_from_list([], _, _, _, Pit, Value, Pit, Value).
+select_best_move_from_list([], _, _, _, Pit, Value, Pit, Value):-writeln(0).
 
 select_best_move_from_list([Pit|Pits], GameState0, Depth, Type,
   CurrentPit0, CurrentValue0, BestPit, BestValue) :-
