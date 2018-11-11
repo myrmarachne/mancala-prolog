@@ -20,25 +20,26 @@ play(GameState0) :-
   select_and_make_move(GameState0, GameState1),
   switch_player(GameState1, GameState2),
   !,
-  % Change the order of Board (currently the player board becomes the opponent board etc)
   play(GameState2).
 
 select_and_make_move(GameState0, GameState1) :-
-  display_board(CurrentPlayer, PlayerBoard, OpponentBoard),
-  not(game_over(CurrentPlayer, PlayerBoard, OpponentBoard)),
+  display_board(GameState0),
+  not(game_over(GameState0)),
   select_pit(GameState0, Pit),
   make_move(Pit, GameState0, GameState1).
 
 % Selects the pit to move seeds from.
 % Depeding on the CurrentPlayer (whether it is players or computers turn) it waits for
 % the user input (and checks its correctness) or selects the best pit for the move.
-select_pit(game_state(PlayerBoard, _, player), Pit) :-
+select_pit(GameState, Pit) :-
+  GameState = game_state(PlayerBoard, _, player),
   nl, writeln(['Select pit']), read_pit(Pit, seeds_number, PlayerBoard), !.
 
 % A silly strategy: choose the first non-empty pit
-select_pit(game_state(PlayerBoard, OpponentBoard, bot), Pit) :-
+select_pit(GameState, Pit) :-
+  GameState = game_state(_, _, bot),
   nl, writeln(['Opponent\'s turn']),
-  find_best_move(PlayerBoard, OpponentBoard, Pit),
+  find_best_move(GameState, Pit),
   write('Opponent selected: '),
   writeln(Pit).
 

@@ -6,8 +6,8 @@
   switch_player/2,
   seeds_number/3,
   more_turns/2,
-  game_over/3,
-  sow_seeds/6,
+  game_over/1,
+  sow_seeds/4,
   seeds_number/3,
   boardSize/1,
   first_non_empty_pit/3 %TODO usunac pozniej
@@ -35,14 +35,16 @@ seeds_number(N, board(Board, _), SeedsNumber) :- nth0(N, Board, SeedsNumber).
 % Distribute the seeds from Nth pit to the consecutive pits on player and opponent
 % boards (the seeds distribution direction should be counter-clockwise).
 sow_seeds(Pit, SeedsNumber0, GameState0, GameState2) :-
+  writeln(GameState0),
   boardSize(BoardSize),
-  SeedsNumber =< (2*BoardSize-Pit),SeedsNumber0 =< (12-Pit),
+  SeedsNumber0 =< (2*BoardSize-Pit),
   sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1),
   sow_seeds_opponent_side(SeedsNumber1, GameState1, _, GameState2).
 
 sow_seeds(Pit, SeedsNumber0, GameState0, GameState3) :-
+  writeln(GameState0),
   boardSize(BoardSize),
-  SeedsNumber > (2*BoardSize-Pit),
+  SeedsNumber0 > (2*BoardSize-Pit),
   sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1),
   sow_seeds_opponent_side(SeedsNumber1, GameState1, SeedsNumber2, GameState2),
   sow_seeds(-1, SeedsNumber2, GameState2, GameState3).
@@ -58,7 +60,7 @@ sow_seeds_player_side(Pit, SeedsNumber0, GameState0, SeedsNumber1, GameState1) :
     GameState0 = game_state(board(PlayerPits0, PlayerHouse0), OpponentBoard, CurrentPlayer),
     GameState1 = game_state(board(PlayerPits2, PlayerHouse1), OpponentBoard, CurrentPlayer),
     boardSize(BoardSize),
-    SeedsNumber > (BoardSize-Pit),
+    SeedsNumber0 > (BoardSize-Pit),
     collect_seeds(Pit, PlayerPits0, PlayerPits1),
     NextPit is Pit+1,
     distribute_seeds(NextPit, SeedsNumber0, PlayerPits1, PlayerPits2),

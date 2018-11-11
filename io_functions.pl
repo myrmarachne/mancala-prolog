@@ -3,7 +3,7 @@
 * Used to display the board and the seeds in every of the pits.
 */
 :- module(io_functions, [
-  display_board/3,
+  display_board/1,
   read_pit/3,
   display_winner_information/1
 ]).
@@ -14,7 +14,7 @@ display_board(game_state(PlayerBoard, OpponentBoard, bot)) :-
   display_board(game_state(OpponentBoard, PlayerBoard, player)).
 
 display_board(GameState) :-
-  GameState = game_state(board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse), _),
+  GameState = game_state(board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse), player),
   reverse(OpponentPits, OpponentPitsReversed), % write the opponents board part in the reverse order
   display_pits(OpponentPitsReversed),
   display_houses(PlayerHouse, OpponentHouse),
