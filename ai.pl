@@ -10,13 +10,14 @@ depth(4).
 
 % List of IDs of all pits on the board
 find_best_move(GameState, BestPit) :-
-  GameState = game_state(_, board(OpponentPits, _), _),
+  GameState = game_state(board(PlayerPits, _), _, _),
   boardSize(BoardSize),
   consecutive(BoardSize, InitialList),
-  all_available_pits(InitialList, OpponentPits, [], CorrectPits),
+  all_available_pits(InitialList, PlayerPits, [], CorrectPits),
   depth(Depth),
   % CorrectPits - pits that contain any seeds. Thus, they can be selected in a moves
-  select_best_move_from_list(CorrectPits, GameState, Depth, minimize, -1, -9999, BestPit, _).
+  select_best_move_from_list(CorrectPits, GameState,
+    Depth, minimize, -1, -9999, BestPit, _).
 
 % all_available_pits([IDs of all pits], OpponentPits, SelectedPits, ResultPits)
 % Pits contains a list of all available pits, that can be chosen by the bot
@@ -32,25 +33,19 @@ all_available_pits([_|Ls], [_|Zs], ResultPits, FinalPits) :-
   all_available_pits(Ls, Zs, ResultPits, FinalPits).
 
 % Function that analyzes all possible moves made by selecting the pits from the lists
-select_best_move_from_list([], _, _, _, _, Pit, Value, Pit, Value).
+select_best_move_from_list([], _, _, _, Pit, Value, Pit, Value).
 
 select_best_move_from_list([Pit|Pits], GameState0, Depth, Type,
   CurrentPit0, CurrentValue0, BestPit, BestValue) :-
     GameState0 = game_state(PlayerBoard, _, _),
     % Simulate the move
-    writeln(1),
     seeds_number(Pit, PlayerBoard, SeedsNumber),
-    writeln(2),
     % Check if the move would end in players house - if so, apply another move (if game not over)
     more_turns(Pit, SeedsNumber),
-    writeln(3),
     sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-    writeln(4),
     !,
     minimax(GameState1, Depth, Type, Type, _, Value),
-    writeln(5),
     compare(Pit, Value, CurrentPit0, CurrentValue0, CurrentPit1, CurrentValue1),
-    writeln(6),
     select_best_move_from_list(Pits, GameState0, Depth, Type,
       CurrentPit1, CurrentValue1, BestPit, BestValue).
 
@@ -61,16 +56,11 @@ select_best_move_from_list([Pit|Pits], GameState0, Depth, Type,
     GameState2 = game_state(OpponentBoard1, PlayerBoard1, CurrentPlayer1),
     % Simulate the move
     seeds_number(Pit, PlayerBoard0, SeedsNumber),
-    writeln(11),
     sow_seeds(Pit, SeedsNumber, GameState0, GameState1),
-    writeln(12),
     !,
     switch_type(Type, NextType),
-    writeln(13),
     minimax(GameState2, Depth, Type, NextType, _, Value),
-    writeln(14),
     compare(Pit, Value, CurrentPit0, CurrentValue0, CurrentPit1, CurrentValue1),
-    writeln(15),
     select_best_move_from_list(Pits, GameState0, Depth, Type,
       CurrentPit1, CurrentValue1, BestPit, BestValue).
 
@@ -78,23 +68,28 @@ select_best_move_from_list([Pit|Pits], GameState0, Depth, Type,
 switch_type(minimize, maximize).
 switch_type(maximize, minimize).
 
-% In case of Depth == 0
-minimax(GameState, 0, maximize, _, _, Value) :-
-  evaluate(GameState, Val),
-  Value is Val.
-minimax(GameState, 0, minimize, _, _, Value) :-
-  evaluate(GameState, Val),
-  Value is (-1) * Val.
 
-minimax(GameState, Depth0, _, NextType, Pit, Value) :-
-  GameState = game_state(_, board(OpponentPits, _), _),
-  Depth0 > 0,
+minimax(GameState, Depth, _, NextType, Pit, Value) :-
+  GameState = game_state(board(PlayerPits, _), _, _),
+  Depth > 0,
   % Get the list of currently available pits
   boardSize(BoardSize),
   consecutive(BoardSize, InitialList),
-  all_available_pits(InitialList, OpponentPits, [], CorrectPits),
-  Depth1 is Depth0 - 1,
-  select_best_move_from_list(CorrectPits, GameState, Depth1, NextType, -1, -9999, Pit, Value).
+  all_available_pits(InitialList, PlayerPits, [], CorrectPits),
+  % Prove that list is not empty
+  nth0(0, CorrectPits, _),
+  Depth1 is Depth - 1,
+  select_best_move_from_list(CorrectPits, GameState,
+  Depth1, NextType, -1, -9999, Pit, Value).
+
+  % In case of Depth == 0 or the CorrectPits list is empty
+minimax(GameState, _, maximize, _, _, Value) :-
+  evaluate(GameState, Val),
+  Value is Val.
+
+minimax(GameState, _, minimize, _, _, Value) :-
+  evaluate(GameState, Val),
+    Value is (-1) * Val.
 
 evaluate(GameState, Value) :-
   GameState = game_state(board(PlayerPits, PlayerHouse), board(OpponentPits, OpponentHouse), _),
