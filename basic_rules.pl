@@ -191,5 +191,4 @@ winner(GameState, CurrentPlayer) :-
   PlayerHouse > OpponentHouse.
 
 winner(GameState, NextPlayer) :-
-  GameState = game_state(_, _, CurrentPlayer),
-  switch_player(CurrentPlayer, NextPlayer).
+  switch_player(GameState, game_state(_, _, NextPlayer)).
